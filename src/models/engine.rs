@@ -13,17 +13,23 @@ struct AppState {
 pub struct Engine {
     state: AppState,
     fps: u32,
+    height: usize,
+    width: usize,
+    grid: Option<Vec<Vec<crate::models::cellmodel::CellModel>>>, // CellModel을 포함하는 2D 벡터 nullable
 }
 
 impl Engine {
     // 생명주기: Initialization (초기화)
-    pub fn new(fps: u32) -> Self {
+    pub fn new(fps: u32, width: usize, height: usize) -> Self {
         Self {
             state: AppState {
                 counter: 0,
                 is_running: true,
             },
             fps,
+            height,
+            width,
+            grid: Some(vec![vec![crate::models::cellmodel::CellModel::new(false); width]; height]),
         }
     }
 
@@ -63,14 +69,22 @@ impl Engine {
         // ANSI 이스케이프 코드: 커서를 맨 위(0,0)로 이동하여 덮어쓰기 (깜빡임 최소화)
         print!("\x1B[H");
 
-        // 터미널에 출력할 내용 작성
-        // println!("========================================");
-        // println!("  Rust 스타일 터미널 엔진 가동 중       ");
-        // println!("========================================");
-        // println!("  현재 카운트: [{}]", self.state.counter);
-        // println!("  목표 FPS:    {} FPS", self.fps);
-        // println!("========================================");
-        // println!("  종료하려면 대기하거나 프로그램(Ctrl+C)을 종료하세요.");
+        // 그리드 출력
+        if let Some(grid) = &self.grid {
+            for row in grid {
+                for cell in row {
+                    match cell.get_is_alive() {
+                        true => {
+                            print!("◼️");
+                        }
+                        false => {
+                            print!("⬜");
+                        }
+                    };
+                }
+                println!();
+            }
+        }
 
         // 버퍼를 즉시 비워서 화면에 출력되도록 보장
         io::stdout().flush().unwrap();
