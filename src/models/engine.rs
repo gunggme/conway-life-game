@@ -1,6 +1,6 @@
 use std::io::{self, Write};
 use std::time::{Duration, Instant};
-use std::{option, thread};
+use std::{thread};
 // 생명 주기
 #[derive(Clone, Debug)]
 struct AppState {
