@@ -15,7 +15,7 @@ pub struct Engine {
     fps: u32,
     height: usize,
     width: usize,
-    grid: Option<Vec<Vec<crate::models::cellmodel::CellModel>>>, // CellModel을 포함하는 2D 벡터 nullable
+    grid: Vec<Vec<crate::models::cellmodel::CellModel>>, // CellModel을 포함하는 2D 벡터 nullable
 }
 
 impl Engine {
@@ -29,12 +29,12 @@ impl Engine {
             fps,
             height,
             width,
-            grid: Some(vec![vec![crate::models::cellmodel::CellModel::new(false); width]; height]),
+            grid: vec![vec![crate::models::cellmodel::CellModel::new(false); width]; height],
         }
     }
 
     // 생명주기: Run Loop (엔진 시작)
-    pub fn run(&mut self, ) {
+    pub fn run(&mut self) {
         let target_dt = Duration::from_secs_f32(1.0 / self.fps as f32);
 
         // 터미널 화면 초기 청소
@@ -65,25 +65,23 @@ impl Engine {
     }
 
     // 생명주기: Render (화면 그리기)
-    fn render(&self) {
+    fn render(&mut self) {
         // ANSI 이스케이프 코드: 커서를 맨 위(0,0)로 이동하여 덮어쓰기 (깜빡임 최소화)
         print!("\x1B[H");
 
         // 그리드 출력
-        if let Some(grid) = &self.grid {
-            for row in grid {
-                for cell in row {
-                    match cell.get_is_alive() {
-                        true => {
-                            print!("◼️");
-                        }
-                        false => {
-                            print!("⬜");
-                        }
-                    };
-                }
-                println!();
+        for row in self.grid.iter_mut() {
+            for cell in row.iter_mut() {
+                match cell.get_is_alive() {
+                    true => {
+                        print!("◼️");
+                    }
+                    false => {
+                        print!("⬜");
+                    }
+                };
             }
+            println!();
         }
 
         // 버퍼를 즉시 비워서 화면에 출력되도록 보장
