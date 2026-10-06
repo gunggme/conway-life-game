@@ -1,6 +1,7 @@
+use crate::models::pattern::Pattern;
 use std::io::{self, Write};
+use std::thread;
 use std::time::{Duration, Instant};
-use std::{thread};
 // 생명 주기
 #[derive(Clone, Debug)]
 struct AppState {
@@ -21,14 +22,7 @@ pub struct Engine {
 impl Engine {
     // 생명주기: Initialization (초기화)
     pub fn new(fps: u32, width: usize, height: usize) -> Self {
-        let mut grid_data = vec![vec![crate::models::cellmodel::CellModel::new(false); width]; height];
-        
-        grid_data[5][5].set_is_alive(true);
-        grid_data[5][6].set_is_alive(true);
-        grid_data[5][7].set_is_alive(true);
-        grid_data[4][4].set_is_alive(true);
-        grid_data[4][5].set_is_alive(true);
-        grid_data[4][6].set_is_alive(true);
+        let grid_data = vec![vec![crate::models::cellmodel::CellModel::new(false); width]; height];
 
         Self {
             state: AppState {
@@ -38,7 +32,18 @@ impl Engine {
             fps,
             height,
             width,
-            grid: grid_data
+            grid: grid_data,
+        }
+    }
+
+    // (origin_x, origin_y)를 좌상단으로 해 패턴의 살아있는 세포를 그리드에 배치
+    pub fn place_pattern(&mut self, pattern: &Pattern, origin_x: usize, origin_y: usize) {
+        for (x, y) in pattern.alive_cells() {
+            let gx = origin_x + x;
+            let gy = origin_y + y;
+            if gx < self.width && gy < self.height {
+                self.grid[gy][gx].set_is_alive(true);
+            }
         }
     }
 
@@ -80,18 +85,22 @@ impl Engine {
             for (x, _) in row.iter().enumerate() {
                 let checking = self.check_current_eight_sight_can_arive(x as i32, y as i32);
                 match checking {
-                    None => { dead_list.push((x, y)); }
-                    Some(arrive) => { arrived_list.push(arrive); }
+                    None => {
+                        dead_list.push((x, y));
+                    }
+                    Some(arrive) => {
+                        arrived_list.push(arrive);
+                    }
                 }
             }
         }
 
         // 살리거나 죽이기
-        for arrive in arrived_list{
+        for arrive in arrived_list {
             self.grid[arrive.1][arrive.0].set_is_alive(true);
         }
 
-        for dead in dead_list{
+        for dead in dead_list {
             self.grid[dead.1][dead.0].set_is_alive(false);
         }
     }
