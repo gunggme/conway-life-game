@@ -21,6 +21,15 @@ pub struct Engine {
 impl Engine {
     // 생명주기: Initialization (초기화)
     pub fn new(fps: u32, width: usize, height: usize) -> Self {
+        let mut grid_data = vec![vec![crate::models::cellmodel::CellModel::new(false); width]; height];
+        
+        grid_data[5][5].set_is_alive(true);
+        grid_data[5][6].set_is_alive(true);
+        grid_data[5][7].set_is_alive(true);
+        grid_data[4][4].set_is_alive(true);
+        grid_data[4][5].set_is_alive(true);
+        grid_data[4][6].set_is_alive(true);
+
         Self {
             state: AppState {
                 counter: 0,
@@ -29,7 +38,7 @@ impl Engine {
             fps,
             height,
             width,
-            grid: vec![vec![crate::models::cellmodel::CellModel::new(false); width]; height],
+            grid: grid_data
         }
     }
 
@@ -97,7 +106,7 @@ impl Engine {
             for cell in row.iter_mut() {
                 match cell.get_is_alive() {
                     true => {
-                        print!("◼️");
+                        print!("⬛");
                     }
                     false => {
                         print!("⬜");
@@ -136,10 +145,6 @@ impl Engine {
             [-1, -1],
         ];
         let mut count = 0;
-
-        if !self.grid[cur_y as usize][cur_x as usize].get_is_alive() {
-            return None;
-        }
 
         for sight in check_eight_sight {
             let check_x = cur_x + sight[0];
