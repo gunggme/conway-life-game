@@ -20,16 +20,5 @@ impl CellModel {
         self.is_alive = alive;
     }
 
-    pub fn set_can_change(&mut self){
-        match self.get_is_alive() {
-            true => {
-                self.can_change = true;
-            }
-            false => {
-                return;
-            }
-        }
-    }
-
     // 인접한 8방향(상하좌우대각선)을 검사해 생존을 업데이트 하는 로직
 }

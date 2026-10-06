@@ -1,6 +1,6 @@
 use std::io::{self, Write};
-use std::thread;
 use std::time::{Duration, Instant};
+use std::{option, thread};
 // 생명 주기
 #[derive(Clone, Debug)]
 struct AppState {
@@ -62,6 +62,29 @@ impl Engine {
     // 생명주기: Update (상태 변경 로직)
     fn update(&mut self) {
         self.state.counter += 1;
+
+        let mut arrived_list: Vec<(usize, usize)> = vec![];
+        let mut dead_list: Vec<(usize, usize)> = vec![];
+
+        // 생명주기 연산
+        for (y, row) in self.grid.iter().enumerate() {
+            for (x, _) in row.iter().enumerate() {
+                let checking = self.check_current_eight_sight_can_arive(x as i32, y as i32);
+                match checking {
+                    None => { dead_list.push((x, y)); }
+                    Some(arrive) => { arrived_list.push(arrive); }
+                }
+            }
+        }
+
+        // 살리거나 죽이기
+        for arrive in arrived_list{
+            self.grid[arrive.1][arrive.0].set_is_alive(true);
+        }
+
+        for dead in dead_list{
+            self.grid[dead.1][dead.0].set_is_alive(false);
+        }
     }
 
     // 생명주기: Render (화면 그리기)
@@ -93,5 +116,80 @@ impl Engine {
         // \x1B[2J: 화면 전체 삭제, \x1B[H: 커서를 홈 위치로 이동
         print!("\x1B[2J\x1B[H");
         io::stdout().flush().unwrap();
+    }
+
+    // 현재 위치에서 8방향 체크
+    fn check_current_eight_sight_can_arive(
+        &self,
+        cur_x: i32,
+        cur_y: i32,
+    ) -> Option<(usize, usize)> {
+        // 인접한 8방향 검사하기
+        let check_eight_sight = [
+            [0, 1],
+            [0, -1],
+            [1, 0],
+            [-1, 0],
+            [1, 1],
+            [1, -1],
+            [-1, 1],
+            [-1, -1],
+        ];
+        let mut count = 0;
+
+        if !self.grid[cur_y as usize][cur_x as usize].get_is_alive() {
+            return None;
+        }
+
+        for sight in check_eight_sight {
+            let check_x = cur_x + sight[0];
+            let check_y = cur_y + sight[1];
+
+            if check_x < 0 || check_y < 0 {
+                continue;
+            }
+
+            let check_x = check_x as usize;
+            let check_y = check_y as usize;
+
+            if check_x >= self.width || check_y >= self.height {
+                continue;
+            }
+
+            count += match self.grid[check_y][check_x].get_is_alive() {
+                true => 1,
+                false => 0,
+            };
+
+            if count > 4 {
+                break;
+            }
+        }
+        match self.grid[cur_y as usize][cur_x as usize].get_is_alive() {
+            true => match count {
+                0..=1 => {
+                    return None;
+                }
+                2..=3 => return Some((cur_x as usize, cur_y as usize)),
+                4..=7 => {
+                    return None;
+                }
+                _ => {
+                    return None;
+                }
+            },
+            false => match count {
+                0..=2 => {
+                    return None;
+                }
+                3 => return Some((cur_x as usize, cur_y as usize)),
+                ..=7 => {
+                    return None;
+                }
+                _ => {
+                    return None;
+                }
+            },
+        }
     }
 }
